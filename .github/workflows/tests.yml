@@ -13,5 +13,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - run: |
-          node cacheLineSize/exec.js
+          cd cacheLineSize
+          node exec.js
         name: Measure Cache Line Size
