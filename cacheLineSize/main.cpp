@@ -23,7 +23,7 @@ auto test(int array_size) {
     auto start = std::chrono::high_resolution_clock::now();
 
     auto getTimeSinceStart = [&start]() {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-start).count();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count();
     };
 
     array = (char*)malloc(TRASH_SIZE + array_size + TRASH_SIZE);
