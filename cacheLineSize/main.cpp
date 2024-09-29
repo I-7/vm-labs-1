@@ -6,7 +6,7 @@
 #define OPERATIONS 1000000000
 #define TRASH_SIZE 100000
 
-char array[TRASH_SIZE + ARRAY_SIZE + TRASH_SIZE];
+char* array;
 
 void* inc(void* args) {
     size_t index = ((size_t*)args)[0];
@@ -19,25 +19,26 @@ void* inc(void* args) {
     return nullptr;
 }
 
-int main() {
+auto test(int array_size) {
     auto start = std::chrono::high_resolution_clock::now();
 
     auto getTimeSinceStart = [&start]() {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-start).count();
     };
 
-    pthread_attr_t attr;
-    cpu_set_t cpus;
-    pthread_attr_init(&attr);
-
-    size_t p = 0;
+    array = (char*)malloc(TRASH_SIZE + array_size + TRASH_SIZE);
+    size_t p = TRASH_SIZE;
     while ((uint64_t(array + p)) % PAGE_PADDING != 0) {
         p++;
     }
-    size_t q = p + ARRAY_SIZE - 1;
+    size_t q = p + array_size - 1;
     
     pthread_t phread1;
     pthread_t phread2;
+
+    pthread_attr_t attr;
+    cpu_set_t cpus;
+    pthread_attr_init(&attr);
 
     auto tm1 = getTimeSinceStart();
     CPU_ZERO(&cpus);
@@ -54,6 +55,19 @@ int main() {
     pthread_join(phread2, nullptr);
     auto tm2 = getTimeSinceStart();
 
-    std::cout << tm2 - tm1 << std::endl;
-    return 0;
+    std::cout << "Time for test with array of size " << array_size << ": " << tm2 - tm1 << std::endl;
+    return tm2 - tm1;
+}
+
+int main() {
+    auto res1 = test(1);
+    size_t cacheLineSize = 0;
+    for (int i = 1; i < 10; i++) {
+        size_t array_size = (1 << i) + 1;
+        auto res = test(array_size);
+        if (res * 2 < res1 && cacheLineSize == 0) {
+            cacheLineSize = (1 << i);
+        }
+    }
+    std::cout << "Measured cache line size: " << cacheLineSize << std::endl;
 }

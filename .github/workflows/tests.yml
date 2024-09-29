@@ -14,5 +14,5 @@ jobs:
 
       - run: |
           cd cacheLineSize
-          node exec.js
+          make
         name: Measure Cache Line Size

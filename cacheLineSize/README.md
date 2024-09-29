@@ -1,1 +1,1 @@
-Run `node exec.js` on linux to measure the cache line size
+Run `make` on linux to measure the cache line size
