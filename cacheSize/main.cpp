@@ -6,7 +6,7 @@
 
 #define PAGE_PADDING 4096
 
-#define MAX_CACHE_SIZE_TO_TEST (1 << 30)
+#define MAX_CACHE_SIZE_TO_TEST (1 << 28)
 #define MEASURED_CACHE_LINE_SIZE 64
 
 int main() {
