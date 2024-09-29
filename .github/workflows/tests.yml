@@ -16,3 +16,8 @@ jobs:
           cd cacheLineSize
           make
         name: Measure Cache Line Size
+      
+      - run: |
+          cd cacheSize
+          make
+        name: Measure Cache Size

@@ -3,6 +3,8 @@
 #include <pthread.h>
 
 #define PAGE_PADDING 4096
+#define MAX_CACHE_LINE_SIZE_TO_TEST 1024
+
 #define OPERATIONS 1000000000
 #define TRASH_SIZE 100000
 
@@ -62,7 +64,7 @@ auto test(int array_size) {
 int main() {
     auto res1 = test(1);
     size_t cacheLineSize = 0;
-    for (int i = 1; i < 10; i++) {
+    for (int i = 1; (1 << i) <= MAX_CACHE_LINE_SIZE_TO_TEST; i++) {
         size_t array_size = (1 << i) + 1;
         auto res = test(array_size);
         if (res * 2 < res1 && cacheLineSize == 0) {
