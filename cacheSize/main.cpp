@@ -35,24 +35,22 @@ int main() {
     uint64_t* trash = (uint64_t*)(buffer + 2 * MAX_CACHE_SIZE_TO_TEST);
     // The middle MAX_CACHE_SIZE_TO_TEST bytes of byffer are used to avoid trash appearing during testing
 
-    auto testCacheSize = [&buffer, &trash, &getTimeSinceStart](size_t n, bool fl){
+    auto testCacheSize = [&buffer, &trash, &getTimeSinceStart](size_t n){
         // Fill the cache by some trash values
         for (size_t i = 0; i < MAX_CACHE_SIZE_TO_TEST; i += sizeof(uint64_t)) {
             trash[i / sizeof(uint64_t)] = std::numeric_limits<uint64_t>::max();
         }
 
-        // Try to put the whole buffer into the cache
-        for (size_t i = 0; i < n; i++) {
-            buffer[i] = i & 255;
+        // Prepare next access indices
+        for (size_t i = 0; i < n; i += MEASURED_CACHE_LINE_SIZE) {
+            *(char**)(buffer + i) = buffer + i + MEASURED_CACHE_LINE_SIZE;
         }
+        *(char**)(buffer + n - MEASURED_CACHE_LINE_SIZE) = buffer;
 
-        uint64_t iter_cnt = MAX_CACHE_SIZE_TO_TEST / n * MEASURED_CACHE_LINE_SIZE;
-        char val = 0;
         auto tm1 = getTimeSinceStart();
-        for (int iter = 0; iter < iter_cnt; iter++) {
-            for (size_t i = 0; i < n; i += MEASURED_CACHE_LINE_SIZE) {
-                if (fl) val ^= buffer[i];
-            }
+        char* addr = buffer;
+        for (int i = 0; i < MAX_CACHE_SIZE_TO_TEST; i++) {
+            addr = *(char**)(addr);
         }
         auto tm2 = getTimeSinceStart();
         return tm2 - tm1;
@@ -60,7 +58,7 @@ int main() {
 
     for (size_t n = MEASURED_CACHE_LINE_SIZE; n <= MAX_CACHE_SIZE_TO_TEST; n <<= 1) {
         std::cout << "Running testCacheSize with n = " << n << std::endl;
-        auto result = testCacheSize(n, true) - testCacheSize(n, false);
+        auto result = testCacheSize(n);
         std::cout << "Result = " << result << std::endl;
     }
 
