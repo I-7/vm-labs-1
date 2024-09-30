@@ -7,13 +7,12 @@
 #define PAGE_PADDING 4096
 
 #define MAX_CACHE_SIZE_TO_TEST (1 << 28)
-#define MEASURED_CACHE_LINE_SIZE 64
 
 int main() {
     auto start = std::chrono::high_resolution_clock::now();
 
     auto getTimeSinceStart = [&start](){
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-start).count();
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count();
     };
 
     char* bufferPrepare = (char*)malloc(4 * MAX_CACHE_SIZE_TO_TEST);
@@ -42,25 +41,40 @@ int main() {
         }
 
         // Prepare next access indices
-        for (size_t i = 0; i < n; i += MEASURED_CACHE_LINE_SIZE) {
-            *(char**)(buffer + i) = buffer + i + MEASURED_CACHE_LINE_SIZE;
+        for (size_t i = 0; i < n; i += CACHE_LINE_SIZE) {
+            *(char**)(buffer + i) = buffer + i + CACHE_LINE_SIZE;
         }
-        *(char**)(buffer + n - MEASURED_CACHE_LINE_SIZE) = buffer;
+        *(char**)(buffer + n - CACHE_LINE_SIZE) = buffer;
 
+        // Run measuring
         auto tm1 = getTimeSinceStart();
         char* addr = buffer;
         for (int i = 0; i < MAX_CACHE_SIZE_TO_TEST; i++) {
             addr = *(char**)(addr);
         }
         auto tm2 = getTimeSinceStart();
+
+        #ifndef QUIET
+        std::cout << "Time for test with array of size " << n << ": " << tm2 - tm1 << std::endl;
+        #endif
         return tm2 - tm1;
     };
 
-    for (size_t n = MEASURED_CACHE_LINE_SIZE; n <= MAX_CACHE_SIZE_TO_TEST; n <<= 1) {
-        std::cout << "Running testCacheSize with n = " << n << std::endl;
-        auto result = testCacheSize(n);
-        std::cout << "Result = " << result << std::endl;
+    auto res1 = testCacheSize(CACHE_LINE_SIZE);
+    size_t cacheSize = 0;
+    for (size_t n = CACHE_LINE_SIZE << 1; n <= MAX_CACHE_SIZE_TO_TEST; n <<= 1) {
+        auto res = testCacheSize(n);
+        if (res1 * 1.5 < res && cacheSize == 0) {
+            cacheSize = n >> 1;
+        }
     }
+    #ifndef QUIET
+    std::cout << "Measured cache size: ";
+    #endif
+    std::cout << cacheSize;
+    #ifndef QUIET
+    std::cout << std::endl;
+    #endif
 
     free(bufferPrepare);
     return 0;

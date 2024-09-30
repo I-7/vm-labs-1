@@ -57,7 +57,9 @@ auto test(int array_size) {
     pthread_join(phread2, nullptr);
     auto tm2 = getTimeSinceStart();
 
+    #ifndef QUIET
     std::cout << "Time for test with array of size " << array_size << ": " << tm2 - tm1 << std::endl;
+    #endif
     return tm2 - tm1;
 }
 
@@ -71,5 +73,11 @@ int main() {
             cacheLineSize = (1 << i);
         }
     }
-    std::cout << "Measured cache line size: " << cacheLineSize << std::endl;
+    #ifndef QUIET
+    std::cout << "Measured cache line size: ";
+    #endif
+    std::cout << cacheLineSize;
+    #ifndef QUIET
+    std::cout << std::endl;
+    #endif
 }
