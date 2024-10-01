@@ -21,3 +21,8 @@ jobs:
           cd cacheSize
           make
         name: Measure Cache Size
+      
+       - run: |
+          cd cacheAssoc
+          make
+        name: Measure Cache Associativity
